@@ -49,30 +49,36 @@ std::shared_ptr<Node> Encoder::createHuffmanTree()
     return orderedNodes.top();
 }
 
-void Encoder::storeEncodingMap(std::shared_ptr<Node> currNode, unsigned int currSize, unsigned int currEncoding)
+void Encoder::storeEncodingMap(std::shared_ptr<Node> currNode, std::vector<bool>& currEncoding)
 {
     if (currNode == nullptr) 
         return;
 
     char currChar = currNode->getVal();
 
-    m_encoding[currChar][0] = currSize;
-    m_encoding[currChar][1] = currEncoding;
+    // leaf node condition
+    if (currNode->left == nullptr && currNode->right == nullptr)
+        m_encoding[currChar] = currEncoding;
 
     if (currNode->left != nullptr)
     {
-        storeEncodingMap(currNode->left, currSize + 1, (currEncoding << 1) | 0);
+        currEncoding.push_back(false);
+        storeEncodingMap(currNode->left, currEncoding);
+        currEncoding.pop_back();
     }
     
     if(currNode->right != nullptr)
     {
-        storeEncodingMap(currNode->right, currSize + 1, (currEncoding << 1) | 1);
+        currEncoding.push_back(true);
+        storeEncodingMap(currNode->right, currEncoding);
+        currEncoding.pop_back();
     }
 }
 
 void Encoder::storeEncodingMap(std::shared_ptr<Node> huffmanRoot)
 {
-    storeEncodingMap(huffmanRoot, 0, 0);
+    std::vector<bool> encoding;
+    storeEncodingMap(huffmanRoot, encoding);
 }
 
 void Encoder::encode()

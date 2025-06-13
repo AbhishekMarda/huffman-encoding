@@ -22,11 +22,11 @@ class Encoder
     char m_outputBuf = 0; 
     size_t m_charsWritten = 0;
 
-    std::vector<bool> m_encoding[CHAR_SIZE] = {{0}};
+    std::vector<bool> m_encoding[CHAR_SIZE];
     std::istream& m_input;
 
     std::shared_ptr<Node> createHuffmanTree();
-    void storeEncodingMap(std::shared_ptr<Node> currNode, unsigned int currSize, unsigned int currEncoding);
+    void storeEncodingMap(std::shared_ptr<Node> currNode, std::vector<bool>& currEncoding);
     void storeEncodingMap(std::shared_ptr<Node> huffmanRoot);
     void writePrelogue(std::ostream& output);
     void finishWrite(std::ostream& output);

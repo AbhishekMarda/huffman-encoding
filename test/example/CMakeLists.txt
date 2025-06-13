@@ -1,0 +1,1 @@
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/file.txt ${CMAKE_CURRENT_BINARY_DIR}/file.txt COPYONLY)
