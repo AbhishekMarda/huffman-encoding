@@ -28,7 +28,16 @@ std::shared_ptr<Node> Encoder::createHuffmanTree()
         if (m_charFrequency[i])
             orderedNodes.push(std::make_shared<Node>(m_charFrequency[i], i));
     }
+    if (orderedNodes.size() == 0) 
+        return nullptr;
 
+    if (orderedNodes.size() == 1)
+    {
+        // special case where a parent does not get created, 
+        // thus the single encoding has 0 characters without this code block
+        std::shared_ptr<Node> dummy = std::make_shared<Node>(orderedNodes.top(), nullptr);
+        return dummy;
+    }
 
     // take the least frequent two, remove them, create a parent, reinsert
     // using stl heap means that we use a balancing tree
@@ -89,14 +98,17 @@ void Encoder::encode()
 
 void Encoder::writePrelogue(std::ostream& output)
 {
-    // reserve 8 bytes to store number of bytes in encoding. 8 bytes is more than the maximum possible size in base 2
-    // that can be stored in a single file. This assumes that the size can be put in size_t, which supports upto 2^64
+    // reserve 2 bytes to store number of bits to read in the last byte. One byte for size, one byte for newline
     
-    // reserve 1 more byte to write the number of bits that are used by the last byte
-    // lastly, reserve 2 bytes for newlines
-    
-    output.write(std::string(11, '\0').c_str(), 11);
-    output.put('\n');
+
+    /*
+    TODO:
+    Fix that the encoding itself can have the new line character, which would mess with things downstream
+    instead, need to keep track of how many bytes are being written as part of the prelogue
+    also, some bug exists in the way the write is happening
+    */
+
+    output.write(std::string(2, '\0').c_str(), 2);
     
     for(unsigned short c = 0; c < CHAR_SIZE; c++)
     {
@@ -109,16 +121,20 @@ void Encoder::writePrelogue(std::ostream& output)
         N = a byte holding the number of bits that were flushed in. We need this because 
             we can only write at an 8 bit (char) level granularity to a file. Byte is to
             be taken at raw value (0-255)
-        e = chars containing encoding (and optional padding as a result of byte granularity)
+        e = chars containing encoding (and optional padding at end as a result of byte granularity)
         */
         if (m_charFrequency[c])
         {
             output.put(c);
 
+            // this condition should never be true, given that the maximum possible encoding can be 255 bits long, at most
+            if (m_encoding[static_cast<size_t>(c)].size() >= CHAR_SIZE)
+            {
+                throw std::runtime_error("Size of character " + std::to_string(c) + " >= " + std::to_string(CHAR_SIZE) + " bytes, and can't be stored.");
+            }
             output.put(static_cast<char>(m_encoding[static_cast<size_t>(c)].size()));
             
             writeEncoding(c, output);
-            flush(output, false);
             output.put('\n');
         }
     }
@@ -127,19 +143,8 @@ void Encoder::writePrelogue(std::ostream& output)
 
 void Encoder::finishWrite(std::ostream& output)
 {
-    // use the 11 bytes that were reserved previously
+    // use the 2 bytes that were reserved previously
     output.seekp(std::ios::beg);
-    
-    // individually write every byte inside size_t. 
-    // a valid point is that at this point, I'm strongly assuming size_t == 64 bits
-    // which is NOT the point of using a templated data type
-    // but, for MVP, doing this is fine. 
-    // FUTURE: dynamically change this behavior at compile time based on size of size_t
-
-    for (int shift = 56; shift >=0; shift -= 8)
-        output.put(static_cast<char>((m_charsWritten >> shift) & 0xFF));
-
-    output.put('\n');
     output.put(m_lastByteBits);
     output.put('\n');
 }
@@ -175,9 +180,10 @@ void Encoder::writeEncoding(char c, std::ostream& output)
             flush(output);
         }
     }
+    flush(output);
 }
 
-inline void Encoder::flush(std::ostream& output, bool updateCharCount)
+inline void Encoder::flush(std::ostream& output)
 {
     if (m_outputSeek == 0)
         return; // nothing to flush
@@ -185,8 +191,6 @@ inline void Encoder::flush(std::ostream& output, bool updateCharCount)
     // flush to stream buffer
     output.put(m_outputBuf);
     
-    if (updateCharCount)
-        m_charsWritten++;
     // reset
     m_lastByteBits = m_outputSeek;
     m_outputSeek = 0;

@@ -1,6 +1,7 @@
 add_library(
     huffman_tools
     encoder.cpp
+    decoder.cpp
     node.cpp
 )
 

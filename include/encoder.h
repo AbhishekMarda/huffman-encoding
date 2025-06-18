@@ -20,7 +20,6 @@ class Encoder
     // to be very variable
     // for now, char is fine as it can just write into the output stream
     char m_outputBuf = 0; 
-    size_t m_charsWritten = 0;
 
     std::vector<bool> m_encoding[CHAR_SIZE];
     std::istream& m_input;
@@ -32,7 +31,7 @@ class Encoder
     void finishWrite(std::ostream& output);
 
     void writeEncoding(char c, std::ostream& output);
-    inline void flush(std::ostream& output, bool updateCharCount = true);
+    inline void flush(std::ostream& output);
 public: 
     Encoder(std::istream& input);
     void encode();

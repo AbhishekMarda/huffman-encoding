@@ -5,6 +5,7 @@
 #include <ostream>
 #include <fstream>
 #include "encoder.h"
+#include "decoder.h"
 #include "node.h"
 
 int main(int argc, char* argv[])
@@ -52,8 +53,8 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    std::ofstream ouptut(outputFile);
-    if (!ouptut.is_open()) {
+    std::ofstream output(outputFile);
+    if (!output.is_open()) {
         std::cerr << "Failed to open output file: " << outputFile << std::endl;
         return 1;
     }
@@ -62,6 +63,11 @@ int main(int argc, char* argv[])
     {
         Encoder e(input);
         e.encode();
-        e.write(ouptut);
+        e.write(output);
+    }
+    else 
+    {
+        Decoder d(input);
+        d.write(output);
     }
 }
