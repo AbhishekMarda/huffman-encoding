@@ -10,16 +10,19 @@
 class Encoder
 {
     static constexpr size_t CHAR_SIZE = std::numeric_limits<unsigned char>::max() + 1;
+    
+    // FUTURE: use uint64_t instead for very large files
     unsigned int m_charFrequency[CHAR_SIZE] = {0};
 
     // to buffer encodings
-    unsigned char m_outputSeek = 0;
+    char m_outputSeek = 7;
     unsigned char m_lastByteBits = 0;
-    // TODO: make a class from output buffer
+    // FUTURE: make a class from output buffer
     // that would allow the output buffer size
     // to be very variable
     // for now, char is fine as it can just write into the output stream
     char m_outputBuf = 0; 
+    unsigned int m_prelogueBytes = 0;
 
     std::vector<bool> m_encoding[CHAR_SIZE];
     std::istream& m_input;
@@ -30,7 +33,7 @@ class Encoder
     void writePrelogue(std::ostream& output);
     void finishWrite(std::ostream& output);
 
-    void writeEncoding(char c, std::ostream& output);
+    int writeEncoding(char c, std::ostream& output, bool flushUponComplete = false);
     inline void flush(std::ostream& output);
 public: 
     Encoder(std::istream& input);
