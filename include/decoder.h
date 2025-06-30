@@ -20,7 +20,8 @@ class Decoder
     std::shared_ptr<Node> m_root = std::make_shared<Node>(0);    // dummy
 
     void readPrelogue();
-    void addEncodingToTree(std::string& encoding);
+    void readEncodingMaps(unsigned int encodingBytes);
+    void addEncodingToTree(char c, unsigned char size, std::string_view& encoding);
 
 public:
     Decoder(std::istream& input): m_input(input) {}

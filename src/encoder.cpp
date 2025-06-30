@@ -1,5 +1,6 @@
 #include <istream>
 #include <ostream>
+#include <iostream>
 #include <queue>
 #include <algorithm>
 #include <string>
@@ -100,14 +101,6 @@ void Encoder::writePrelogue(std::ostream& output)
     // reserve 5 bytes to store number of bytes written in prelogue. 4 bytes for integer, one byte for newline.
     // reserve 2 bytes to store number of bits to read in the last byte. One byte for size, one byte for newline
 
-    /*
-    TODO:
-    Fix that the encoding itself can have the new line character, which would mess with things downstream
-    instead, need to keep track of how many bytes are being written as part of the prelogue
-
-    also, some bug exists in the way the write is happening. they need to be written in the opposite direction
-    */
-
     output.write(std::string(7, '\0').c_str(), 7);
     
     for(unsigned short c = 0; c < CHAR_SIZE; c++)
@@ -137,7 +130,6 @@ void Encoder::writePrelogue(std::ostream& output)
             m_prelogueBytes += writeEncoding(c, output, true);
         }
     }
-    output.put('\n');
 }
 
 void Encoder::finishWrite(std::ostream& output)
@@ -189,6 +181,12 @@ int Encoder::writeEncoding(char c, std::ostream& output, bool flushUponComplete)
             writtenBytes++;
         }
     }
+
+    #ifdef DEBUG
+    std::cerr << "Encoding for " << std::to_string(static_cast<unsigned int>(c)) << std::endl;
+    for (bool value : encoding) std::cerr << value << std::endl;
+    #endif
+
     if (flushUponComplete)
     {
         flush(output);

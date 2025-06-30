@@ -58,16 +58,23 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to open output file: " << outputFile << std::endl;
         return 1;
     }
-    
-    if (encode)
+    try 
     {
-        Encoder e(input);
-        e.encode();
-        e.write(output);
+        if (encode)
+        {
+            Encoder e(input);
+            e.encode();
+            e.write(output);
+        }
+        else 
+        {
+            Decoder d(input);
+            d.write(output);
+        }
     }
-    else 
+    catch (const std::exception& e)
     {
-        Decoder d(input);
-        d.write(output);
+        std::cout << e.what() << std::endl;
+        std::terminate();
     }
 }
