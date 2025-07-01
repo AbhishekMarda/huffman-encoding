@@ -131,7 +131,6 @@ void Encoder::writePrelogue(std::ostream& output)
             val += writeEncoding(c, output, true);
             m_prelogueBytes += val;
             val += 2;
-            std::cout << "Skipping ahead " << val << " bytes." << std::endl;
         }
     }
 }

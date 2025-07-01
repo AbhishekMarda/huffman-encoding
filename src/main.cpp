@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
         }
         else 
         {
+            std::cout << "Decoding " << inputFile << " into " << outputFile << std::endl;
             Decoder d(input);
             d.write(output);
         }
