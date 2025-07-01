@@ -127,7 +127,11 @@ void Encoder::writePrelogue(std::ostream& output)
             }
             output.put(static_cast<char>(m_encoding[static_cast<size_t>(c)].size()));
             m_prelogueBytes++;
-            m_prelogueBytes += writeEncoding(c, output, true);
+            int val = 0;
+            val += writeEncoding(c, output, true);
+            m_prelogueBytes += val;
+            val += 2;
+            std::cout << "Skipping ahead " << val << " bytes." << std::endl;
         }
     }
 }
@@ -167,7 +171,7 @@ void Encoder::write(std::ostream& output)
 int Encoder::writeEncoding(char c, std::ostream& output, bool flushUponComplete)
 {
     int writtenBytes = 0;
-    const std::vector<bool>& encoding = m_encoding[static_cast<size_t>(c)];
+    const std::vector<bool>& encoding = m_encoding[static_cast<unsigned char>(c)];
 
     // FUTURE: optimize to operate on many bits at once
     for(bool value : encoding)
@@ -182,23 +186,18 @@ int Encoder::writeEncoding(char c, std::ostream& output, bool flushUponComplete)
         }
     }
 
-    #ifdef DEBUG
-    std::cerr << "Encoding for " << std::to_string(static_cast<unsigned int>(c)) << std::endl;
-    for (bool value : encoding) std::cerr << value << std::endl;
-    #endif
-
     if (flushUponComplete)
     {
-        flush(output);
-        writtenBytes++;
+        if (flush(output))
+            writtenBytes++;
     }
     return writtenBytes;
 }
 
-inline void Encoder::flush(std::ostream& output)
+inline bool Encoder::flush(std::ostream& output)
 {
     if (m_outputSeek == 7)
-        return; // nothing to flush
+        return false; // nothing to flush
     if (m_outputSeek > 7)
         throw std::runtime_error("Output seek detected to be larger than available bits in a byte. Aborting.");
     // flush to stream buffer
@@ -208,4 +207,5 @@ inline void Encoder::flush(std::ostream& output)
     m_lastByteBits = 7 - m_outputSeek;
     m_outputSeek = 7; // num bits in a byte (8) - 1
     m_outputBuf = 0;
+    return true;
 }

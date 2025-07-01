@@ -34,7 +34,7 @@ class Encoder
     void finishWrite(std::ostream& output);
 
     int writeEncoding(char c, std::ostream& output, bool flushUponComplete = false);
-    inline void flush(std::ostream& output);
+    inline bool flush(std::ostream& output);
 public: 
     Encoder(std::istream& input);
     void encode();

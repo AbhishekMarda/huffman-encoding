@@ -62,6 +62,7 @@ int main(int argc, char* argv[])
     {
         if (encode)
         {
+            std::cout << "Encoding " << inputFile << " into " << outputFile << std::endl;
             Encoder e(input);
             e.encode();
             e.write(output);
